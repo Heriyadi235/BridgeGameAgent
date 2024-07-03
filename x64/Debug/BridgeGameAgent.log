@@ -1,0 +1,3 @@
+﻿  BridgeGameAgent.cpp
+D:\UnityProject\packages\BridgeGameAgent\BridgeGameAgent.cpp(86,57): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+  BridgeGameAgent.vcxproj -> D:\UnityProject\packages\BridgeGameAgent\x64\Debug\BridgeGameAgent.exe
