@@ -5,10 +5,13 @@
 #include <string>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
+#include <windows.h>
 #pragma comment(lib, "ws2_32.lib")
 
 int main()
 {
+
+    
     // 初始化 Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
@@ -41,17 +44,33 @@ int main()
         return 1;
     }
 
-    // 连接成功，开始转发数据
-    //std::cout << "Connected to the server. Type 'quit' to exit." << std::endl;
+
+    bool initialized = false; //未初始化时，程序首先通过套接字发送自身路径，并在收到第一条回复后initialized变为真
+
+    
 
     while (true)
     {
+        
+        int bytesSent = 0;
+        if (!initialized)
+        {
+            wchar_t pathStr[MAX_PATH];
+            GetModuleFileName(NULL, pathStr, MAX_PATH);
+            int bufferSize = WideCharToMultiByte(CP_UTF8, 0, pathStr, -1, NULL, 0, NULL, NULL);
+            std::string input(bufferSize, '\0');
+            WideCharToMultiByte(CP_UTF8, 0, pathStr, -1, &input[0], bufferSize, NULL, NULL);
+            bytesSent = send(clientSocket, input.c_str(), static_cast<int>(input.length()), 0);
+        }
+        else
+        {
+            std::string input;
+            std::getline(std::cin, input);
+            bytesSent = send(clientSocket, input.c_str(), static_cast<int>(input.length()), 0);
+        }
         // 从控制台读取输入
-        std::string input;
-        std::getline(std::cin, input);
-
         // 发送输入的数据到服务器
-        int bytesSent = send(clientSocket, input.c_str(), static_cast<int>(input.length()), 0);
+        
         if (bytesSent == SOCKET_ERROR)
         {
             std::cerr << "Failed to send data to the server." << std::endl;
@@ -66,7 +85,16 @@ int main()
         int bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
         if (bytesReceived > 0)
         {
-            std::cout << buffer << std::endl;
+            if (initialized)
+            {
+                std::cout << buffer << std::endl;
+            }
+            else
+            {
+                initialized = true;
+            }
+
+
         }
         else if (bytesReceived == 0)
         {
